@@ -159,7 +159,7 @@ func (gg *GalaktaGlare) TextClassifier(text, config string) (string, error) {
 func getCategories(config *toml.Tree) map[string][]string {
 	categories := make(map[string][]string)
 
-	for _, key := range config.KeysHashed() {
+	for key := range config.Keys() {
 		if key.IsTable() {
 			category := key.String()
 			wordsArray := config.GetArray(category + ".words")
@@ -168,6 +168,12 @@ func getCategories(config *toml.Tree) map[string][]string {
 				for _, word := range wordsArray {
 					words = append(words, word.(string))
 				}
+				for _, word := range wordsArray {
+					if str, ok := word.(string); ok {
+						words = append(words, str)
+					}
+				}
+
 				categories[category] = words
 			}
 		}
