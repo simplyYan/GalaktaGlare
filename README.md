@@ -32,3 +32,5 @@ GalaktaGlare is open-source and under the BSD-3-Clause license
 
 ## Contribute
 You can contribute to this project. Just open a pull-request and make your changes. Add, improve or correct features.
+
+> A project founded by Wesley Yan Soares Brehmer
