@@ -272,26 +272,6 @@ func (da *DataAnalysis) Mode(data []float64) []float64 {
 	return modeValues
 }
 
-func (gg *GalaktaGlare) ExtractEntities(text string) []string {
-	re := regexp.MustCompile(`\b\w+\b`)
-	words := re.FindAllString(text, -1)
-
-	stopwords := map[string]bool{
-		"the": true,
-		"is":  true,
-	}
-
-	var entities []string
-	for _, word := range words {
-		word = strings.ToLower(word)
-		if !stopwords[word] {
-			entities = append(entities, word)
-		}
-	}
-
-	return entities
-}
-
 func (gg *GalaktaGlare) ExtractEntities(text string, customStopwords map[string]bool) []string {
 	predefinedStopwords := map[string]bool{
 		"the": true,
