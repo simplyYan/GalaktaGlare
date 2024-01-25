@@ -23,7 +23,7 @@ go get -u github.com/simplyYan/GalaktaGlare
 ```
 
 ## Documentation
-The documentation is available on the Wiki of this repository.
+The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
 
 ## License
 GalaktaGlare is open-source and under the BSD-3-Clause license
