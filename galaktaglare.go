@@ -161,7 +161,7 @@ func getCategories(config *toml.Tree) map[string][]string {
 
 	for _, key := range config.Keys() {
 		value := config.Get(key)
-		if subTree, ok := value.(*toml.Tree); ok && subTree.Kind() == toml.TableKind { // Check if value is *toml.Tree before calling .Kind()
+		if subTree, ok := value.(map[string]interface{}); ok {
 			wordsArray := config.GetArray(key + ".words")
 			if wordsArray != nil {
 				var words []string
