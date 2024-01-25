@@ -19,6 +19,7 @@ import (
 	"strings"
 	"github.com/nfnt/resize"
 	"github.com/pelletier/go-toml"
+	"sync"
 )
 
 type GalaktaGlare struct {
