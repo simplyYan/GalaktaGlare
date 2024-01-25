@@ -17,9 +17,11 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
+
+	"github.com/corona10/goimagehash"
 	"github.com/nfnt/resize"
 	"github.com/pelletier/go-toml"
-	"sync"
 )
 
 type GalaktaGlare struct {
@@ -47,17 +49,28 @@ func (gg *GalaktaGlare) ImageDB(folderPath string) error {
 	return nil
 }
 
+func dHash(img image.Image) (uint64, error) {
+	hash, err := goimagehash.DifferenceHash(img)
+	if err != nil {
+		return 0, err
+	}
+	return hash.GetHash(), nil
+}
+
 func (gg *GalaktaGlare) ImageScan(imagePath string) (float64, error) {
 	img, err := loadImage(imagePath)
 	if err != nil {
 		return 0, err
 	}
 
-	asciiImage := imageToASCII(img)
+	hash1, err := dHash(img)
+	if err != nil {
+		return 0, err
+	}
 
 	var maxSimilarity float64
 	var wg sync.WaitGroup
-	similarityChan := make(chan float64)
+	similarityChan := make(chan float64, len(gg.imageDB))
 
 	for _, dbImagePath := range gg.imageDB {
 		wg.Add(1)
@@ -69,8 +82,13 @@ func (gg *GalaktaGlare) ImageScan(imagePath string) (float64, error) {
 				return
 			}
 
-			dbAsciiImage := imageToASCII(dbImg)
-			similarity := compareImages(asciiImage, dbAsciiImage)
+			hash2, err := dHash(dbImg)
+			if err != nil {
+				// handle error
+				return
+			}
+
+			similarity := hashSimilarity(hash1, hash2)
 			similarityChan <- similarity
 		}(dbImagePath)
 	}
@@ -87,6 +105,14 @@ func (gg *GalaktaGlare) ImageScan(imagePath string) (float64, error) {
 	}
 
 	return maxSimilarity, nil
+}
+
+func hashSimilarity(hash1, hash2 uint64) float64 {
+
+	distance := goimagehash.HammingDistance(hash1, hash2)
+	normalizedDistance := float64(distance) / 64.0
+	similarity := 1.0 - normalizedDistance
+	return similarity
 }
 
 func loadImage(filename string) (image.Image, error) {
@@ -115,7 +141,7 @@ func imageToASCII(img image.Image) string {
 	for y := 0; y < height; y += 2 {
 		for x := 0; x < width; x++ {
 			r, g, b, _ := img.At(x, y).RGBA()
-			gray := uint8((0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b)) / 256.0) // Convert to float64 before division
+			gray := uint8((0.2126*float64(r) + 0.7152*float64(g) + 0.0722*float64(b)) / 256.0) // Convert to float64 before division
 			asciiArt += string(grayToChar(gray))
 		}
 		asciiArt += "\n"
