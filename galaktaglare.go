@@ -108,7 +108,7 @@ func imageToASCII(img image.Image) string {
 func grayToChar(gray uint8) rune {
 	chars := []rune("@%#*+=-:. ")
 
-	index := int(gray) * (len(chars) - 1) / 256
+	index := int(gray) * (len(chars) - 1) / 255
 	return chars[index]
 }
 
@@ -160,9 +160,8 @@ func getCategories(config *toml.Tree) map[string][]string {
 	categories := make(map[string][]string)
 
 	for _, key := range config.Keys() {
-		if key.IsTable() {
-			category := key.String()
-			wordsArray := config.GetArray(category + ".words")
+		if config.Get(key).Kind() == toml.TableKind {
+			wordsArray := config.GetArray(key + ".words")
 			if wordsArray != nil {
 				var words []string
 				for _, word := range wordsArray.([]interface{}) {
@@ -170,7 +169,7 @@ func getCategories(config *toml.Tree) map[string][]string {
 						words = append(words, str)
 					}
 				}
-				categories[category] = words
+				categories[key] = words
 			}
 		}
 	}
