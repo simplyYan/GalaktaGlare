@@ -17,7 +17,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-
+	"github.com/nfnt/resize"
 	"github.com/pelletier/go-toml"
 )
 
@@ -55,15 +55,31 @@ func (gg *GalaktaGlare) ImageScan(imagePath string) (float64, error) {
 	asciiImage := imageToASCII(img)
 
 	var maxSimilarity float64
+	var wg sync.WaitGroup
+	similarityChan := make(chan float64)
+
 	for _, dbImagePath := range gg.imageDB {
-		dbImg, err := loadImage(dbImagePath)
-		if err != nil {
-			return 0, err
-		}
+		wg.Add(1)
+		go func(dbImagePath string) {
+			defer wg.Done()
+			dbImg, err := loadImage(dbImagePath)
+			if err != nil {
+				// handle error
+				return
+			}
 
-		dbAsciiImage := imageToASCII(dbImg)
-		similarity := compareImages(asciiImage, dbAsciiImage)
+			dbAsciiImage := imageToASCII(dbImg)
+			similarity := compareImages(asciiImage, dbAsciiImage)
+			similarityChan <- similarity
+		}(dbImagePath)
+	}
 
+	go func() {
+		wg.Wait()
+		close(similarityChan)
+	}()
+
+	for similarity := range similarityChan {
 		if similarity > maxSimilarity {
 			maxSimilarity = similarity
 		}
@@ -84,7 +100,9 @@ func loadImage(filename string) (image.Image, error) {
 		return nil, err
 	}
 
-	return img, nil
+	resizedImg := resize.Resize(1000, 0, img, resize.Lanczos3)
+
+	return resizedImg, nil
 }
 
 func imageToASCII(img image.Image) string {
