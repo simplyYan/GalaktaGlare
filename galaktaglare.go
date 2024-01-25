@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,9 +19,6 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
-
-	"github.com/fogleman/gg"
-	"github.com/nfnt/resize"
 )
 
 type GalaktaGlare struct {
@@ -110,7 +108,7 @@ func imageToASCII(img image.Image) string {
 func grayToChar(gray uint8) rune {
 	chars := []rune("@%#*+=-:. ")
 
-	index := int(gray * float64(len(chars)-1))
+	index := int(gray) * (len(chars) - 1) / 256
 	return chars[index]
 }
 
@@ -161,7 +159,7 @@ func (gg *GalaktaGlare) TextClassifier(text, config string) (string, error) {
 func getCategories(config *toml.Tree) map[string][]string {
 	categories := make(map[string][]string)
 
-	for _, key := range config.Keys() {
+	for _, key := range config.KeysHashed() {
 		if key.IsTable() {
 			category := key.String()
 			wordsArray := config.GetArray(category + ".words")
@@ -270,6 +268,26 @@ func (da *DataAnalysis) Mode(data []float64) []float64 {
 	}
 
 	return modeValues
+}
+
+func (gg *GalaktaGlare) ExtractEntities(text string) []string {
+	re := regexp.MustCompile(`\b\w+\b`)
+	words := re.FindAllString(text, -1)
+
+	stopwords := map[string]bool{
+		"the": true,
+		"is":  true,
+	}
+
+	var entities []string
+	for _, word := range words {
+		word = strings.ToLower(word)
+		if !stopwords[word] {
+			entities = append(entities, word)
+		}
+	}
+
+	return entities
 }
 
 func (gg *GalaktaGlare) ExtractEntities(text string, customStopwords map[string]bool) []string {
