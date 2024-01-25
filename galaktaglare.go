@@ -108,8 +108,10 @@ func (gg *GalaktaGlare) ImageScan(imagePath string) (float64, error) {
 }
 
 func hashSimilarity(hash1, hash2 uint64) float64 {
+	hashStr1 := fmt.Sprintf("%064b", hash1)
+	hashStr2 := fmt.Sprintf("%064b", hash2)
 
-	distance := goimagehash.HammingDistance(hash1, hash2)
+	distance := goimagehash.HammingDistanceByString(hashStr1, hashStr2)
 	normalizedDistance := float64(distance) / 64.0
 	similarity := 1.0 - normalizedDistance
 	return similarity
