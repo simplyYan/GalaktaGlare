@@ -4,19 +4,19 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 ## Main features
 
-- Text Classification;
+- Text Classification (Windows, Linux and macOS);
 
-- Data analysis;
+- Data analysis (Windows, Linux and macOS);
 
-- Anomaly detection;
+- Anomaly detection (Windows, Linux and macOS);
 
-- Image classification/recognition;
+- Image classification/recognition (Windows, Linux and macOS);
 
 - Voice command recognition (Windows and Linux);
 
 - TTS (Text To Speech) for Windows and Linux;
 
-- Natural Language Processing (NLP);
+- Natural Language Processing (NLP) for Windows, Linux and macOS;
 
 ## How to install
 You can install using 'go get'. To do this, use the command:
