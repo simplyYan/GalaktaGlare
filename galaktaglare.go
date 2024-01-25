@@ -160,7 +160,7 @@ func getCategories(config *toml.Tree) map[string][]string {
 	categories := make(map[string][]string)
 
 	for _, key := range config.Keys() {
-		if key.(toml.Key).IsTable() {
+		if key.IsTable() {
 			category := key.String()
 			wordsArray := config.GetArray(category + ".words")
 			if wordsArray != nil {
