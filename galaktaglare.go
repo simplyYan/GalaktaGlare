@@ -111,10 +111,25 @@ func hashSimilarity(hash1, hash2 uint64) float64 {
 	hashStr1 := fmt.Sprintf("%064b", hash1)
 	hashStr2 := fmt.Sprintf("%064b", hash2)
 
-	distance := goimagehash.HammingDistanceByString(hashStr1, hashStr2)
+	distance := hammingDistance(hashStr1, hashStr2)
 	normalizedDistance := float64(distance) / 64.0
 	similarity := 1.0 - normalizedDistance
 	return similarity
+}
+
+func hammingDistance(str1, str2 string) int {
+	if len(str1) != len(str2) {
+		return -1
+	}
+
+	distance := 0
+	for i := 0; i < len(str1); i++ {
+		if str1[i] != str2[i] {
+			distance++
+		}
+	}
+
+	return distance
 }
 
 func loadImage(filename string) (image.Image, error) {
