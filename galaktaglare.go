@@ -96,7 +96,7 @@ func imageToASCII(img image.Image) string {
 	for y := 0; y < height; y += 2 {
 		for x := 0; x < width; x++ {
 			r, g, b, _ := img.At(x, y).RGBA()
-			gray := uint8(0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b)) / 256
+			gray := uint8((0.2126*float64(r)+0.7152*float64(g)+0.0722*float64(b)) / 256.0) // Convert to float64 before division
 			asciiArt += string(grayToChar(gray))
 		}
 		asciiArt += "\n"
@@ -160,7 +160,8 @@ func getCategories(config *toml.Tree) map[string][]string {
 	categories := make(map[string][]string)
 
 	for _, key := range config.Keys() {
-		if config.Get(key).Kind() == toml.TableKind {
+		value := config.Get(key)
+		if subTree, ok := value.(*toml.Tree); ok && subTree.Kind() == toml.TableKind { // Check if value is *toml.Tree before calling .Kind()
 			wordsArray := config.GetArray(key + ".words")
 			if wordsArray != nil {
 				var words []string
