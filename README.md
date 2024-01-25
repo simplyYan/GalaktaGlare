@@ -1,4 +1,5 @@
 ![GalaktaGlare](gglare.gif)
+
 GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go that brings intuitive machine/deep learning with a variety of features.
 
 ## Main features
