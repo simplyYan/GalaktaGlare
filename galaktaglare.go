@@ -368,7 +368,6 @@ type SpeechConfig struct {
 	Reco string `toml:"reco"`
 }
 
-// Speech converte uma configuração TOML para JSON e cria o arquivo ggtts.json.
 func (gg *GalaktaGlare) Speech(tomlConfig string) error {
 	// Decodificar o arquivo TOML
 	var config SpeechConfig
@@ -376,8 +375,16 @@ func (gg *GalaktaGlare) Speech(tomlConfig string) error {
 		return fmt.Errorf("erro ao decodificar o arquivo TOML: %v", err)
 	}
 
-	// Converter para JSON
-	jsonConfig, err := json.MarshalIndent(config, "", "  ")
+	// Converter para JSON com nomes de campo em letra minúscula
+	jsonConfig, err := json.MarshalIndent(struct {
+		Lang string `json:"lang"`
+		Text string `json:"text"`
+		Reco string `json:"reco"`
+	}{
+		Lang: config.Lang,
+		Text: config.Text,
+		Reco: config.Reco,
+	}, "", "  ")
 	if err != nil {
 		return fmt.Errorf("erro ao converter para JSON: %v", err)
 	}
@@ -454,13 +461,23 @@ func extractFile(file *zip.File) error {
 }
 
 func runExecutable(executableName string) error {
-	cmd := exec.Command(executableName)
+	var cmd *exec.Cmd
+
+	if runtime.GOOS == "linux" {
+		cmd = exec.Command("chmod", "+x", executableName)
+		err := cmd.Run()
+		if err != nil {
+			return fmt.Errorf("falha ao dar permissão de execução: %v", err)
+		}
+	}
+
+	cmd = exec.Command(executableName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("failed to execute %s: %v", executableName, err)
+		return fmt.Errorf("falha ao executar %s: %v", executableName, err)
 	}
 
 	return nil
