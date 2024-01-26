@@ -701,7 +701,14 @@ func (l *DenseLayer) Forward(input []float64) []float64 {
 	return output
 }
 
-func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float64) {
+func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate float64) {
+	for i := len(nn.Layers) - 1; i >= 0; i-- {
+		layer := nn.Layers[i]
+		output = layer.Backpropagate(output, target, learningRate)
+	}
+}
+
+func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float64) []float64 {
 	if l.DropoutRate > 0.0 {
 		for i := range output {
 			output[i] *= l.DropoutMask[i]
@@ -712,23 +719,29 @@ func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float6
 		outputError[i] = output[i] - target[i]
 	}
 
-	for i := len(nn.Layers) - 1; i >= 0; i-- {
-		layer := nn.Layers[i]
-
-		activationGradient := make([]float64, len(output))
-		for j := range output {
-			activationGradient[j] = layer.Activation(output[j]) * (1 - layer.Activation(output[j]))
-		}
-
-		for j := range output {
-			for k := range layer.Weights[j] {
-				layer.Weights[j][k] -= learningRate * outputError[j] * activationGradient[j] * layer.Inputs[k]
-			}
-			layer.Biases[j] -= learningRate * outputError[j] * activationGradient[j]
-		}
-
-		outputError = nn.MultiplyMatrixVector(layer.Weights, outputError)
+	// Calculate the gradient of the activation function
+	activationGradient := make([]float64, len(output))
+	for i, out := range output {
+		activationGradient[i] = l.Activation(out) * (1 - l.Activation(out)) // This is for sigmoid, change if using a different activation function
 	}
+
+	// Update weights and biases
+	for j := range output {
+		for k := range l.Weights[j] {
+			l.Weights[j][k] -= learningRate * outputError[j] * activationGradient[j] * l.Inputs[k]
+		}
+		l.Biases[j] -= learningRate * outputError[j] * activationGradient[j]
+	}
+
+	// Calculate the output error for the previous layer
+	prevLayerOutputError := make([]float64, l.InputSize)
+	for i := range l.Weights {
+		for j := range l.Weights[i] {
+			prevLayerOutputError[j] += l.Weights[i][j] * outputError[i]
+		}
+	}
+
+	return prevLayerOutputError
 }
 
 func (nn *NeuralNetwork) MultiplyMatrixVector(matrix [][]float64, vector []float64) []float64 {
