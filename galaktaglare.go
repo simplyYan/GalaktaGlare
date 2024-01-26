@@ -525,6 +525,7 @@ type DenseLayer struct {
 	Weights    [][]float64
 	Biases     []float64
 	Activation ActivationFunc
+	Inputs     []float64
 }
 
 type ActivationFunc func(float64) float64
@@ -564,8 +565,11 @@ func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc) *DenseL
 
 func (l *DenseLayer) Forward(input []float64) []float64 {
 	if len(input) != l.InputSize {
-		panic("Tamanho de entrada incorreto")
+		panic("Incorrect input size")
 	}
+
+	l.Inputs = make([]float64, len(input))
+	copy(l.Inputs, input)
 
 	output := make([]float64, l.OutputSize)
 	for i := range output {
@@ -608,7 +612,6 @@ func (nn *NeuralNetwork) Train(inputs, targets [][]float64, learningRate float64
 }
 
 func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate float64) {
-
 	outputError := make([]float64, len(output))
 	for i := range output {
 		outputError[i] = output[i] - target[i]
@@ -629,8 +632,6 @@ func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate fl
 			layer.Biases[j] -= learningRate * outputError[j] * activationGradient[j]
 		}
 
-		prevLayerOutput := make([]float64, len(layer.Inputs))
-		copy(prevLayerOutput, layer.Inputs)
 		outputError = nn.MultiplyVectors(layer.Weights, outputError)
 	}
 }
