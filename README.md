@@ -18,6 +18,8 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 - Natural Language Processing (NLP) for Windows, Linux and macOS;
 
+- Operations with Tensors;
+
 ## How to install
 You can install using 'go get'. To do this, use the command:
 ```
