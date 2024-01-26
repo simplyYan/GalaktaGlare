@@ -2,6 +2,7 @@ package galaktaglare
 
 import (
 	"archive/zip"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -519,16 +520,78 @@ func runExecutable(executableName string) error {
 	return nil
 }
 
+type ActivationFunc func(float64) float64
+
 type DenseLayer struct {
-	InputSize  int
-	OutputSize int
-	Weights    [][]float64
-	Biases     []float64
-	Activation ActivationFunc
-	Inputs     []float64
+	InputSize            int
+	OutputSize           int
+	Weights              [][]float64
+	Biases               []float64
+	Activation           ActivationFunc
+	Inputs               []float64
+	WeightDecayL1        float64
+	WeightDecayL2        float64
+	DropoutRate          float64
+	DropoutMask          []float64
+	LearningRateSchedule LearningRateSchedule
+	BatchNorm            *BatchNormalization
 }
 
-type ActivationFunc func(float64) float64
+type LearningRateSchedule struct {
+	InitialRate float64
+	Decay       float64
+}
+
+type BatchNormalization struct {
+	Gamma    float64
+	Beta     float64
+	Mean     []float64
+	Variance []float64
+	Epsilon  float64
+	Input    []float64
+	Output   []float64
+}
+
+func NewBatchNormalization(gamma, beta, epsilon float64) *BatchNormalization {
+	return &BatchNormalization{
+		Gamma:   gamma,
+		Beta:    beta,
+		Epsilon: epsilon,
+	}
+}
+
+func (bn *BatchNormalization) Forward(input []float64) []float64 {
+	bn.Input = input
+
+	// Calcule a média e a variância
+	mean := 0.0
+	for _, x := range input {
+		mean += x
+	}
+	mean /= float64(len(input))
+
+	variance := 0.0
+	for _, x := range input {
+		variance += math.Pow(x-mean, 2)
+	}
+	variance /= float64(len(input))
+
+	// Normalize as entradas
+	bn.Mean = append(bn.Mean, mean)
+	bn.Variance = append(bn.Variance, variance)
+	normalized := make([]float64, len(input))
+	for i, x := range input {
+		normalized[i] = (x - mean) / math.Sqrt(variance+bn.Epsilon)
+	}
+
+	// Scale e shift usando Gamma e Beta
+	bn.Output = make([]float64, len(input))
+	for i, x := range normalized {
+		bn.Output[i] = bn.Gamma*x + bn.Beta
+	}
+
+	return bn.Output
+}
 
 func Sigmoid(x float64) float64 {
 	return 1 / (1 + math.Exp(-x))
@@ -538,7 +601,11 @@ func ReLU(x float64) float64 {
 	return math.Max(0, x)
 }
 
-func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc) *DenseLayer {
+func (l *DenseLayer) GetAdjustedLearningRate(epoch int) float64 {
+	return l.LearningRateSchedule.InitialRate / (1 + l.LearningRateSchedule.Decay*float64(epoch))
+}
+
+func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc, weightDecayL1, weightDecayL2, dropoutRate float64, lrSchedule LearningRateSchedule) *DenseLayer {
 	rand.Seed(time.Now().UnixNano())
 
 	weights := make([][]float64, outputSize)
@@ -555,32 +622,49 @@ func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc) *DenseL
 	}
 
 	return &DenseLayer{
-		InputSize:  inputSize,
-		OutputSize: outputSize,
-		Weights:    weights,
-		Biases:     biases,
-		Activation: activation,
+		InputSize:            inputSize,
+		OutputSize:           outputSize,
+		Weights:              weights,
+		Biases:               biases,
+		Activation:           activation,
+		WeightDecayL1:        weightDecayL1,
+		WeightDecayL2:        weightDecayL2,
+		DropoutRate:          dropoutRate,
+		DropoutMask:          nil,
+		LearningRateSchedule: lrSchedule,
 	}
 }
 
-func (l *DenseLayer) Forward(input []float64) []float64 {
-	if len(input) != l.InputSize {
-		panic("Incorrect input size")
-	}
-
-	l.Inputs = make([]float64, len(input))
-	copy(l.Inputs, input)
-
-	output := make([]float64, l.OutputSize)
+func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float64) {
+	outputError := make([]float64, len(output))
 	for i := range output {
-		for j := range input {
-			output[i] += input[j] * l.Weights[i][j]
-		}
-		output[i] += l.Biases[i]
-		output[i] = l.Activation(output[i])
+		outputError[i] = output[i] - target[i]
 	}
 
-	return output
+	for i := len(nn.Layers) - 1; i >= 0; i-- {
+		layer := nn.Layers[i]
+
+		activationGradient := make([]float64, len(output))
+		for j := range output {
+			activationGradient[j] = layer.Activation(output[j]) * (1 - layer.Activation(output[j]))
+		}
+
+		for j := range output {
+			for k := range layer.Weights[j] {
+				// Gradient descent with regularization terms
+				weightUpdate := learningRate * (outputError[j]*activationGradient[j]*layer.Inputs[k] +
+					layer.WeightDecayL1*math.Signbit(layer.Weights[j][k]) +
+					2*layer.WeightDecayL2*layer.Weights[j][k])
+				layer.Weights[j][k] -= weightUpdate
+			}
+			// Biases update with regularization term
+			layer.Biases[j] -= learningRate * (outputError[j]*activationGradient[j] +
+				layer.WeightDecayL1*math.Signbit(layer.Biases[j]) +
+				2*layer.WeightDecayL2*layer.Biases[j])
+		}
+
+		outputError = nn.MultiplyMatrixVector(layer.Weights, outputError)
+	}
 }
 
 type NeuralNetwork struct {
@@ -599,19 +683,62 @@ func (nn *NeuralNetwork) Predict(input []float64) []float64 {
 	return output
 }
 
-func (nn *NeuralNetwork) Train(inputs, targets [][]float64, learningRate float64, epochs int) {
+func (nn *NeuralNetwork) Train(inputs, targets [][]float64, initialLearningRate float64, epochs int) {
 	for epoch := 0; epoch < epochs; epoch++ {
+		adjustedLearningRate := initialLearningRate
+		if len(nn.Layers) > 0 {
+			adjustedLearningRate = nn.Layers[0].GetAdjustedLearningRate(epoch)
+		}
+
 		for i, input := range inputs {
 			target := targets[i]
 
 			output := nn.Predict(input)
 
-			nn.Backpropagate(output, target, learningRate)
+			nn.Backpropagate(output, target, adjustedLearningRate)
 		}
 	}
 }
 
-func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate float64) {
+func (l *DenseLayer) Forward(input []float64) []float64 {
+	if l.DropoutRate > 0.0 {
+		l.DropoutMask = make([]float64, len(input))
+		for i := range input {
+			if rand.Float64() > l.DropoutRate {
+				l.DropoutMask[i] = 1.0
+			} else {
+				l.DropoutMask[i] = 0.0
+			}
+			input[i] *= l.DropoutMask[i]
+		}
+	}
+
+	l.Inputs = make([]float64, len(input))
+	copy(l.Inputs, input)
+
+	output := make([]float64, l.OutputSize)
+	for i := range output {
+		for j := range input {
+			output[i] += input[j] * l.Weights[i][j]
+		}
+		output[i] += l.Biases[i]
+		output[i] = l.Activation(output[i])
+	}
+
+	if l.BatchNorm != nil {
+		normalized := l.BatchNorm.Forward(output)
+		copy(output, normalized)
+	}
+
+	return output
+}
+
+func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float64) {
+	if l.DropoutRate > 0.0 {
+		for i := range output {
+			output[i] *= l.DropoutMask[i]
+		}
+	}
 	outputError := make([]float64, len(output))
 	for i := range output {
 		outputError[i] = output[i] - target[i]
@@ -656,6 +783,39 @@ func (nn *NeuralNetwork) MultiplyVectors(v1 []float64, v2 []float64) []float64 {
 		result[i] = v1[i] * v2[i]
 	}
 	return result
+}
+
+func LoadModel(filename string) (*NeuralNetwork, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decoder := gob.NewDecoder(file)
+	var nn NeuralNetwork
+	if err := decoder.Decode(&nn); err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Model loaded with %s\n", filename)
+	return &nn, nil
+}
+
+func (nn *NeuralNetwork) SaveModel(filename string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(nn); err != nil {
+		return err
+	}
+
+	fmt.Printf("Model saved in %s\n", filename)
+	return nil
 }
 
 type Variable struct {
@@ -734,4 +894,91 @@ func productOfOthers(curr, exclude *Variable) float64 {
 		}
 	}
 	return product
+}
+
+type TrainingMonitor struct {
+	Epochs        int
+	DisplayPeriod int
+}
+
+func NewTrainingMonitor(epochs, displayPeriod int) *TrainingMonitor {
+	return &TrainingMonitor{
+		Epochs:        epochs,
+		DisplayPeriod: displayPeriod,
+	}
+}
+
+func (tm *TrainingMonitor) MonitorTraining(nn *NeuralNetwork, inputs, targets [][]float64, initialLearningRate float64) {
+	// Training loop
+	for epoch := 0; epoch < tm.Epochs; epoch++ {
+		adjustedLearningRate := nn.Layers[0].GetAdjustedLearningRate(epoch)
+
+		// Training step
+		for i, input := range inputs {
+			target := targets[i]
+			output := nn.Predict(input)
+
+			nn.Backpropagate(output, target, adjustedLearningRate)
+		}
+
+		// Display metrics at specified intervals
+		if (epoch+1)%tm.DisplayPeriod == 0 {
+			accuracy, loss := tm.calculateMetrics(nn, inputs, targets)
+			fmt.Printf("Epoch %d - Accuracy: %.2f%%, Loss: %.4f\n", epoch+1, accuracy*100, loss)
+		}
+	}
+}
+
+func (tm *TrainingMonitor) calculateMetrics(nn *NeuralNetwork, inputs, targets [][]float64) (accuracy, loss float64) {
+	var correctPredictions int
+	totalLoss := 0.0
+
+	for i, input := range inputs {
+		target := targets[i]
+		predicted := nn.Predict(input)
+
+		// Calculate accuracy
+		if isPredictionCorrect(predicted, target) {
+			correctPredictions++
+		}
+
+		// Calculate loss (using mean squared error)
+		totalLoss += calculateLoss(predicted, target) // Example loss, replace with your own loss function
+	}
+
+	accuracy = float64(correctPredictions) / float64(len(inputs))
+	loss = totalLoss / float64(len(inputs))
+
+	return accuracy, loss
+}
+
+func isPredictionCorrect(predicted, target []float64) bool {
+	// Comparing the index with the maximum value
+	predictedLabel := argmax(predicted)
+	targetLabel := argmax(target)
+
+	return predictedLabel == targetLabel
+}
+
+func calculateLoss(predicted, target []float64) float64 {
+	// Example loss: mean squared error
+	loss := 0.0
+	for i := range predicted {
+		loss += math.Pow(predicted[i]-target[i], 2)
+	}
+	return loss / float64(len(predicted))
+}
+
+func argmax(values []float64) int {
+	maxIndex := 0
+	maxValue := values[0]
+
+	for i, value := range values {
+		if value > maxValue {
+			maxIndex = i
+			maxValue = value
+		}
+	}
+
+	return maxIndex
 }
