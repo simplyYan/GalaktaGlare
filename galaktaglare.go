@@ -632,8 +632,22 @@ func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate fl
 			layer.Biases[j] -= learningRate * outputError[j] * activationGradient[j]
 		}
 
-		outputError = nn.MultiplyVectors(layer.Weights, outputError)
+		outputError = nn.MultiplyMatrixVector(layer.Weights, outputError)
 	}
+}
+
+func (nn *NeuralNetwork) MultiplyMatrixVector(matrix [][]float64, vector []float64) []float64 {
+	rows := len(matrix)
+	cols := len(matrix[0])
+	result := make([]float64, rows)
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			result[i] += matrix[i][j] * vector[j]
+		}
+	}
+
+	return result
 }
 
 func (nn *NeuralNetwork) MultiplyVectors(v1 []float64, v2 []float64) []float64 {
