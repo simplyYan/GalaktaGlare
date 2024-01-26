@@ -635,38 +635,6 @@ func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc, weightD
 	}
 }
 
-func (l *DenseLayer) Backpropagate(output, target []float64, learningRate float64) {
-	outputError := make([]float64, len(output))
-	for i := range output {
-		outputError[i] = output[i] - target[i]
-	}
-
-	for i := len(nn.Layers) - 1; i >= 0; i-- {
-		layer := nn.Layers[i]
-
-		activationGradient := make([]float64, len(output))
-		for j := range output {
-			activationGradient[j] = layer.Activation(output[j]) * (1 - layer.Activation(output[j]))
-		}
-
-		for j := range output {
-			for k := range layer.Weights[j] {
-				// Gradient descent with regularization terms
-				weightUpdate := learningRate * (outputError[j]*activationGradient[j]*layer.Inputs[k] +
-					layer.WeightDecayL1*math.Signbit(layer.Weights[j][k]) +
-					2*layer.WeightDecayL2*layer.Weights[j][k])
-				layer.Weights[j][k] -= weightUpdate
-			}
-			// Biases update with regularization term
-			layer.Biases[j] -= learningRate * (outputError[j]*activationGradient[j] +
-				layer.WeightDecayL1*math.Signbit(layer.Biases[j]) +
-				2*layer.WeightDecayL2*layer.Biases[j])
-		}
-
-		outputError = nn.MultiplyMatrixVector(layer.Weights, outputError)
-	}
-}
-
 type NeuralNetwork struct {
 	Layers []*DenseLayer
 }
