@@ -516,3 +516,205 @@ func runExecutable(executableName string) error {
 
 	return nil
 }
+
+type DenseLayer struct {
+	InputSize  int
+	OutputSize int
+	Weights    [][]float64
+	Biases     []float64
+	Activation ActivationFunc
+}
+
+type ActivationFunc func(float64) float64
+
+func Sigmoid(x float64) float64 {
+	return 1 / (1 + math.Exp(-x))
+}
+
+func ReLU(x float64) float64 {
+	return math.Max(0, x)
+}
+
+func NewDenseLayer(inputSize, outputSize int, activation ActivationFunc) *DenseLayer {
+	rand.Seed(time.Now().UnixNano())
+
+	weights := make([][]float64, outputSize)
+	for i := range weights {
+		weights[i] = make([]float64, inputSize)
+		for j := range weights[i] {
+			weights[i][j] = rand.Float64()
+		}
+	}
+
+	biases := make([]float64, outputSize)
+	for i := range biases {
+		biases[i] = rand.Float64()
+	}
+
+	return &DenseLayer{
+		InputSize:  inputSize,
+		OutputSize: outputSize,
+		Weights:    weights,
+		Biases:     biases,
+		Activation: activation,
+	}
+}
+
+func (l *DenseLayer) Forward(input []float64) []float64 {
+	if len(input) != l.InputSize {
+		panic("Tamanho de entrada incorreto")
+	}
+
+	output := make([]float64, l.OutputSize)
+	for i := range output {
+		for j := range input {
+			output[i] += input[j] * l.Weights[i][j]
+		}
+		output[i] += l.Biases[i]
+		output[i] = l.Activation(output[i])
+	}
+
+	return output
+}
+
+type NeuralNetwork struct {
+	Layers []*DenseLayer
+}
+
+func NewNeuralNetwork(layers ...*DenseLayer) *NeuralNetwork {
+	return &NeuralNetwork{Layers: layers}
+}
+
+func (nn *NeuralNetwork) Predict(input []float64) []float64 {
+	output := input
+	for _, layer := range nn.Layers {
+		output = layer.Forward(output)
+	}
+	return output
+}
+
+func (nn *NeuralNetwork) Train(inputs, targets [][]float64, learningRate float64, epochs int) {
+	for epoch := 0; epoch < epochs; epoch++ {
+		for i, input := range inputs {
+			target := targets[i]
+
+			output := nn.Predict(input)
+
+			nn.Backpropagate(output, target, learningRate)
+		}
+	}
+}
+
+func (nn *NeuralNetwork) Backpropagate(output, target []float64, learningRate float64) {
+
+	outputError := make([]float64, len(output))
+	for i := range output {
+		outputError[i] = output[i] - target[i]
+	}
+
+	for i := len(nn.Layers) - 1; i >= 0; i-- {
+		layer := nn.Layers[i]
+
+		activationGradient := make([]float64, len(output))
+		for j := range output {
+			activationGradient[j] = layer.Activation(output[j]) * (1 - layer.Activation(output[j]))
+		}
+
+		for j := range output {
+			for k := range layer.Weights[j] {
+				layer.Weights[j][k] -= learningRate * outputError[j] * activationGradient[j] * layer.Inputs[k]
+			}
+			layer.Biases[j] -= learningRate * outputError[j] * activationGradient[j]
+		}
+
+		prevLayerOutput := make([]float64, len(layer.Inputs))
+		copy(prevLayerOutput, layer.Inputs)
+		outputError = nn.MultiplyVectors(layer.Weights, outputError)
+	}
+}
+
+func (nn *NeuralNetwork) MultiplyVectors(v1 []float64, v2 []float64) []float64 {
+	result := make([]float64, len(v1))
+	for i := range v1 {
+		result[i] = v1[i] * v2[i]
+	}
+	return result
+}
+
+type Variable struct {
+	Value     float64
+	Gradient  float64
+	Children  []*Variable
+	Operation string
+}
+
+func NewVariable(value float64, operation string) *Variable {
+	return &Variable{
+		Value:     value,
+		Gradient:  0,
+		Children:  make([]*Variable, 0),
+		Operation: operation,
+	}
+}
+
+func Add(a, b *Variable) *Variable {
+	result := NewVariable(a.Value+b.Value, "Add")
+	result.Children = append(result.Children, a, b)
+	return result
+}
+
+func Mul(a, b *Variable) *Variable {
+	result := NewVariable(a.Value*b.Value, "Mul")
+	result.Children = append(result.Children, a, b)
+	return result
+}
+
+func Sin(a *Variable) *Variable {
+	result := NewVariable(math.Sin(a.Value), "Sin")
+	result.Children = append(result.Children, a)
+	return result
+}
+
+func Cos(a *Variable) *Variable {
+	result := NewVariable(math.Cos(a.Value), "Cos")
+	result.Children = append(result.Children, a)
+	return result
+}
+
+func Backward(result *Variable) {
+	result.Gradient = 1
+	backwardHelper(result)
+}
+
+func backwardHelper(curr *Variable) {
+	switch curr.Operation {
+	case "Add":
+		for _, child := range curr.Children {
+			child.Gradient += curr.Gradient
+			backwardHelper(child)
+		}
+	case "Mul":
+		for _, child := range curr.Children {
+			child.Gradient += curr.Gradient * productOfOthers(curr, child)
+			backwardHelper(child)
+		}
+	case "Sin":
+		child := curr.Children[0]
+		child.Gradient += curr.Gradient * math.Cos(child.Value)
+		backwardHelper(child)
+	case "Cos":
+		child := curr.Children[0]
+		child.Gradient += -curr.Gradient * math.Sin(child.Value)
+		backwardHelper(child)
+	}
+}
+
+func productOfOthers(curr, exclude *Variable) float64 {
+	product := 1.0
+	for _, child := range curr.Children {
+		if child != exclude {
+			product *= child.Value
+		}
+	}
+	return product
+}
