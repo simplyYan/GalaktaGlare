@@ -288,6 +288,49 @@ func calculateStatistics(data []float64) (float64, float64) {
 	return mean, stdDev
 }
 
+type Tensor struct {
+	shape []int
+	data  []float64
+}
+
+func NewTensor(shape []int) *Tensor {
+	size := 1
+	for _, dim := range shape {
+		size *= dim
+	}
+	data := make([]float64, size)
+	return &Tensor{shape, data}
+}
+
+func (t *Tensor) Set(value float64, indices ...int) {
+	if len(indices) != len(t.shape) {
+		panic("Incorrect number of indexes")
+	}
+	flatIndex := t.flatIndex(indices...)
+	t.data[flatIndex] = value
+}
+
+func (t *Tensor) Get(indices ...int) float64 {
+	if len(indices) != len(t.shape) {
+		panic("Incorrect number of indexes")
+	}
+	flatIndex := t.flatIndex(indices...)
+	return t.data[flatIndex]
+}
+
+func (t *Tensor) flatIndex(indices ...int) int {
+	flatIndex := 0
+	stride := 1
+	for i := len(indices) - 1; i >= 0; i-- {
+		if indices[i] >= t.shape[i] || indices[i] < 0 {
+			panic("Index out of bounds")
+		}
+		flatIndex += indices[i] * stride
+		stride *= t.shape[i]
+	}
+	return flatIndex
+}
+
 type DataAnalysis struct{}
 
 func (da *DataAnalysis) Mean(data []float64) float64 {
@@ -299,7 +342,6 @@ func (da *DataAnalysis) Mean(data []float64) float64 {
 }
 
 func (da *DataAnalysis) Median(data []float64) float64 {
-	// Ordena os dados
 	sortedData := make([]float64, len(data))
 	copy(sortedData, data)
 	sort.Float64s(sortedData)
@@ -314,7 +356,6 @@ func (da *DataAnalysis) Median(data []float64) float64 {
 }
 
 func (da *DataAnalysis) Mode(data []float64) []float64 {
-	// Conta a frequência de cada valor
 	frequency := make(map[float64]int)
 	for _, value := range data {
 		frequency[value]++
@@ -369,13 +410,11 @@ type SpeechConfig struct {
 }
 
 func (gg *GalaktaGlare) Speech(tomlConfig string) error {
-	// Decodificar o arquivo TOML
 	var config SpeechConfig
 	if err := toml.Unmarshal([]byte(tomlConfig), &config); err != nil {
-		return fmt.Errorf("erro ao decodificar o arquivo TOML: %v", err)
+		return fmt.Errorf("error decoding TOML file: %v", err)
 	}
 
-	// Converter para JSON com nomes de campo em letra minúscula
 	jsonConfig, err := json.MarshalIndent(struct {
 		Lang string `json:"lang"`
 		Text string `json:"text"`
@@ -386,12 +425,11 @@ func (gg *GalaktaGlare) Speech(tomlConfig string) error {
 		Reco: config.Reco,
 	}, "", "  ")
 	if err != nil {
-		return fmt.Errorf("erro ao converter para JSON: %v", err)
+		return fmt.Errorf("error when converting to JSON: %v", err)
 	}
 
-	// Criar ou sobrescrever o arquivo ggtts.json
 	if err := ioutil.WriteFile("ggtts.json", jsonConfig, 0644); err != nil {
-		return fmt.Errorf("erro ao escrever o arquivo ggtts.json: %v", err)
+		return fmt.Errorf("error writing file ggtts.json: %v", err)
 	}
 
 	return nil
@@ -401,7 +439,6 @@ func (gg *GalaktaGlare) SpeechCfg() error {
 	var zipFileName string
 	var executableName string
 
-	// Check the operating system
 	switch runtime.GOOS {
 	case "linux":
 		zipFileName = "linux_speech.zip"
@@ -413,14 +450,12 @@ func (gg *GalaktaGlare) SpeechCfg() error {
 		return fmt.Errorf("unsupported operating system: %s", runtime.GOOS)
 	}
 
-	// Open the ZIP file
 	zipFile, err := zip.OpenReader(zipFileName)
 	if err != nil {
 		return fmt.Errorf("failed to open ZIP file: %v", err)
 	}
 	defer zipFile.Close()
 
-	// Extract files to the current directory
 	for _, file := range zipFile.File {
 		err := extractFile(file)
 		if err != nil {
@@ -430,7 +465,6 @@ func (gg *GalaktaGlare) SpeechCfg() error {
 
 	fmt.Printf("Files successfully extracted from ZIP file: %s\n", zipFileName)
 
-	// Execute the galaktatts executable
 	err = runExecutable(executableName)
 	if err != nil {
 		return fmt.Errorf("failed to execute executable %s: %v", executableName, err)
@@ -467,7 +501,7 @@ func runExecutable(executableName string) error {
 		cmd = exec.Command("chmod", "+x", executableName)
 		err := cmd.Run()
 		if err != nil {
-			return fmt.Errorf("falha ao dar permissão de execução: %v", err)
+			return fmt.Errorf("failure to give execute permission: %v", err)
 		}
 	}
 
@@ -477,7 +511,7 @@ func runExecutable(executableName string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("falha ao executar %s: %v", executableName, err)
+		return fmt.Errorf("failure to execute %s: %v", executableName, err)
 	}
 
 	return nil
