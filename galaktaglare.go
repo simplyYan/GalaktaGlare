@@ -981,17 +981,17 @@ type Example struct {
 	Label    string
 }
 
-func (dt *DecisionTree) Train(data []Example) {
-	dt.Root = buildTree(data)
+func (dt *DecisionTree) Train(data []Example, maxDepth, minSamplesSplit int) {
+	dt.Root = buildTree(data, maxDepth, minSamplesSplit)
 }
 
 func (dt *DecisionTree) Predict(features []float64) string {
 	return predict(dt.Root, features)
 }
 
-func buildTree(data []Example) *TreeNode {
-	if len(data) == 0 {
-		return nil
+func buildTree(data []Example, maxDepth, minSamplesSplit int) *TreeNode {
+	if len(data) == 0 || maxDepth == 0 {
+		return &TreeNode{PredictedClass: majorityClass(data)}
 	}
 
 	if allSameClass(data) {
@@ -1002,8 +1002,8 @@ func buildTree(data []Example) *TreeNode {
 
 	leftData, rightData := splitData(data, splitFeature, splitValue)
 
-	leftNode := buildTree(leftData)
-	rightNode := buildTree(rightData)
+	leftNode := buildTree(leftData, maxDepth-1, minSamplesSplit)
+	rightNode := buildTree(rightData, maxDepth-1, minSamplesSplit)
 
 	return &TreeNode{
 		SplitFeature:   splitFeature,
@@ -1029,12 +1029,89 @@ func allSameClass(data []Example) bool {
 }
 
 func findBestSplit(data []Example) (bestFeature int, bestValue float64) {
+	numFeatures := len(data[0].Features)
+	numExamples := len(data)
+	bestGini := math.MaxFloat64
 
-	return 0, data[0].Features[0]
+	for feature := 0; feature < numFeatures; feature++ {
+		// Ordena as amostras com base no valor do recurso atual
+		sort.Slice(data, func(i, j int) bool {
+			return data[i].Features[feature] < data[j].Features[feature]
+		})
+
+		for i := 1; i < numExamples; i++ {
+			// Calcula o ponto médio entre os valores ordenados
+			splitValue := (data[i-1].Features[feature] + data[i].Features[feature]) / 2.0
+
+			leftData, rightData := splitData(data, feature, splitValue)
+			gini := calculateGini(leftData, rightData)
+
+			// Atualiza o melhor split se encontrarmos um com menor Gini
+			if gini < bestGini {
+				bestGini = gini
+				bestFeature = feature
+				bestValue = splitValue
+			}
+		}
+	}
+
+	return bestFeature, bestValue
+}
+
+func calculateGini(leftData, rightData []Example) float64 {
+	total := float64(len(leftData) + len(rightData))
+	if total == 0 {
+		return 0.0
+	}
+
+	// Calcula Gini para o nó esquerdo
+	giniLeft := calculateNodeGini(leftData)
+
+	// Calcula Gini para o nó direito
+	giniRight := calculateNodeGini(rightData)
+
+	// Calcula Gini ponderado
+	weightLeft := float64(len(leftData)) / total
+	weightRight := float64(len(rightData)) / total
+
+	return weightLeft*giniLeft + weightRight*giniRight
+}
+
+func calculateNodeGini(data []Example) float64 {
+	classCounts := make(map[string]int)
+	for _, example := range data {
+		classCounts[example.Label]++
+	}
+
+	gini := 1.0
+	total := float64(len(data))
+	for _, count := range classCounts {
+		prob := float64(count) / total
+		gini -= prob * prob
+	}
+
+	return gini
+}
+
+func majorityClass(data []Example) string {
+	classCounts := make(map[string]int)
+	for _, example := range data {
+		classCounts[example.Label]++
+	}
+
+	maxCount := 0
+	majorityClass := ""
+	for class, count := range classCounts {
+		if count > maxCount {
+			maxCount = count
+			majorityClass = class
+		}
+	}
+
+	return majorityClass
 }
 
 func splitData(data []Example, feature int, value float64) (leftData, rightData []Example) {
-
 	for _, example := range data {
 		if example.Features[feature] < value {
 			leftData = append(leftData, example)
@@ -1055,9 +1132,4 @@ func predict(node *TreeNode, features []float64) string {
 	} else {
 		return predict(node.Right, features)
 	}
-}
-
-func majorityClass(data []Example) string {
-
-	return data[0].Label
 }
