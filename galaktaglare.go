@@ -963,3 +963,101 @@ func argmax(values []float64) int {
 
 	return maxIndex
 }
+
+type TreeNode struct {
+	SplitFeature   int
+	SplitValue     float64
+	PredictedClass string
+	Left           *TreeNode
+	Right          *TreeNode
+}
+
+type DecisionTree struct {
+	Root *TreeNode
+}
+
+type Example struct {
+	Features []float64
+	Label    string
+}
+
+func (dt *DecisionTree) Train(data []Example) {
+	dt.Root = buildTree(data)
+}
+
+func (dt *DecisionTree) Predict(features []float64) string {
+	return predict(dt.Root, features)
+}
+
+func buildTree(data []Example) *TreeNode {
+	if len(data) == 0 {
+		return nil
+	}
+
+	if allSameClass(data) {
+		return &TreeNode{PredictedClass: data[0].Label}
+	}
+
+	splitFeature, splitValue := findBestSplit(data)
+
+	leftData, rightData := splitData(data, splitFeature, splitValue)
+
+	leftNode := buildTree(leftData)
+	rightNode := buildTree(rightData)
+
+	return &TreeNode{
+		SplitFeature:   splitFeature,
+		SplitValue:     splitValue,
+		Left:           leftNode,
+		Right:          rightNode,
+		PredictedClass: majorityClass(data),
+	}
+}
+
+func allSameClass(data []Example) bool {
+	if len(data) == 0 {
+		return true
+	}
+
+	firstClass := data[0].Label
+	for _, example := range data {
+		if example.Label != firstClass {
+			return false
+		}
+	}
+	return true
+}
+
+func findBestSplit(data []Example) (bestFeature int, bestValue float64) {
+
+	return 0, data[0].Features[0]
+}
+
+func splitData(data []Example, feature int, value float64) (leftData, rightData []Example) {
+
+	for _, example := range data {
+		if example.Features[feature] < value {
+			leftData = append(leftData, example)
+		} else {
+			rightData = append(rightData, example)
+		}
+	}
+	return leftData, rightData
+}
+
+func predict(node *TreeNode, features []float64) string {
+	if node.PredictedClass != "" {
+		return node.PredictedClass
+	}
+
+	if features[node.SplitFeature] < node.SplitValue {
+		return predict(node.Left, features)
+	} else {
+		return predict(node.Right, features)
+	}
+}
+
+func majorityClass(data []Example) string {
+
+	return data[0].Label
+}
