@@ -2,48 +2,65 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
-	"github.com/simplyYan/GalaktaGlare"
+	galaktaglare "github.com/simplyYan/GalaktaGlare"
+
+	"github.com/pelletier/go-toml"
 )
 
 func main() {
-	inputSize := 3
-	hiddenLayerSize := 4
-	outputSize := 2
+	rand.Seed(time.Now().UnixNano())
 
-	initialLearningRate := 0.01
-	epochs := 1000
-	lrSchedule := galaktaglare.LearningRateSchedule{InitialRate: initialLearningRate, Decay: 0.01}
-
-	hiddenLayer := galaktaglare.NewDenseLayer(inputSize, hiddenLayerSize, galaktaglare.Sigmoid, 0.01, 0.01, 0.5, lrSchedule)
-	outputLayer := galaktaglare.NewDenseLayer(hiddenLayerSize, outputSize, galaktaglare.Sigmoid, 0.01, 0.01, 0.5, lrSchedule)
-
-	nn := galaktaglare.NewNeuralNetwork(hiddenLayer, outputLayer)
-
+	// Define the training data
 	inputs := [][]float64{
-		{0.0, 0.0, 1.0},
-		{0.0, 1.0, 1.0},
-		{1.0, 0.0, 1.0},
-		{1.0, 1.0, 1.0},
+		{0, 0},
+		{0, 1},
+		{1, 0},
+		{1, 1},
 	}
+
 	targets := [][]float64{
-		{1.0, 0.0},
-		{0.0, 1.0},
-		{0.0, 1.0},
-		{1.0, 0.0},
+		{0},
+		{1},
+		{1},
+		{0},
 	}
 
-	nn.Train(inputs, targets, initialLearningRate, epochs)
-
-	trainingMonitor := galaktaglare.NewTrainingMonitor(epochs, 100)
-	trainingMonitor.MonitorTraining(nn, inputs, targets, initialLearningRate)
-
-	testInputs := [][]float64{
-		{0.0, 0.0, 0.0},
-		{1.0, 1.0, 0.0},
+	// Create the neural network
+	inputSize := 2
+	outputSize := 1
+	activationFunc := galaktaglare.Sigmoid
+	weightDecayL1 := 0.0
+	weightDecayL2 := 0.0
+	dropoutRate := 0.0
+	lrSchedule := galaktaglare.LearningRateSchedule{
+		InitialRate: 0.1,
+		Decay:       0.0,
 	}
-	for _, input := range testInputs {
-		predicted := nn.Predict(input)
-		fmt.Printf("Input: %v, Predicted: %v\n", input, predicted)
+
+	layer := galaktaglare.NewDenseLayer(inputSize, outputSize, activationFunc, weightDecayL1, weightDecayL2, dropoutRate, lrSchedule)
+	neuralNetwork := galaktaglare.NewNeuralNetwork(layer)
+
+	// Train the neural network
+	epochs := 10000
+	trainingMonitor := galaktaglare.NewTrainingMonitor(epochs, epochs/10)
+	trainingMonitor.MonitorTraining(neuralNetwork, inputs, targets, lrSchedule.InitialRate)
+
+	// Test the trained neural network
+	fmt.Println("Testing the Neural Network:")
+	for _, input := range inputs {
+		prediction := neuralNetwork.Predict(input)
+		fmt.Printf("Input: %v, Output: %.2f\n", input, prediction[0])
+	}
+
+	// Save the trained model
+	modelFilename := "neural_network_model.gob"
+	err := neuralNetwork.SaveModel(modelFilename)
+	if err != nil {
+		fmt.Println("Error saving template:", err)
+	} else {
+		fmt.Println("Model saved in", modelFilename)
 	}
 }
