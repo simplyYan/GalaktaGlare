@@ -1,0 +1,5 @@
+[sentiment]
+words = ["happy", "fun", "friendly"]
+
+[programmer]
+words = ["printf", "func", "programmer", "go"]

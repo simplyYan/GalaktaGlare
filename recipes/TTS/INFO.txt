@@ -1,0 +1,1 @@
+For this code to work properly, you must adapt it to your operating system. By default, it comes for Linux. Some adaptations refer to the use of BatchScript on Windows, as it currently expects ShellScript. Another key factor is that you need to download the ZIP of GalaktaGlare's TTS API for your respective system, as mentioned in the documentation;
