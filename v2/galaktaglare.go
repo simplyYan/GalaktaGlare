@@ -63,7 +63,7 @@ func (gg *GalaktaGlare) dHash(img image.Image) (uint64, error) {
 	return hash.GetHash(), nil
 }
 
-func TextToSpeech(text, lang string) error {
+func (gg *GalaktaGlare) TextToSpeech(text, lang string) error {
     var speech htgotts.Speech
     var err error
     
