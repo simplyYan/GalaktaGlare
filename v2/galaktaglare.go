@@ -1,22 +1,19 @@
 package galaktaglare
 
 import (
-	"archive/zip"
 	"encoding/gob"
 	"fmt"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
-	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,6 +50,77 @@ func (gg *GalaktaGlare) ImageDB(folderPath string) error {
 
 	gg.imageDB = imageDB
 	return nil
+}
+
+func (gg *GalaktaGlare) Numseq(text string) float64 {
+	textLow := strings.ToLower(text)
+	result := strings.Replace(textLow, "a", "1", -1)
+	result = strings.Replace(result, "b", "2", -1)
+	result = strings.Replace(result, "c", "3", -1)
+	result = strings.Replace(result, "d", "4", -1)
+	result = strings.Replace(result, "e", "5", -1)
+	result = strings.Replace(result, "f", "6", -1)
+	result = strings.Replace(result, "g", "7", -1)
+	result = strings.Replace(result, "h", "8", -1)
+	result = strings.Replace(result, "i", "9", -1)
+	result = strings.Replace(result, "j", "10", -1)
+	result = strings.Replace(result, "k", "11", -1)
+	result = strings.Replace(result, "l", "12", -1)
+	result = strings.Replace(result, "m", "13", -1)
+	result = strings.Replace(result, "n", "14", -1)
+	result = strings.Replace(result, "o", "15", -1)
+	result = strings.Replace(result, "p", "16", -1)
+	result = strings.Replace(result, "q", "17", -1)
+	result = strings.Replace(result, "r", "18", -1)
+	result = strings.Replace(result, "s", "19", -1)
+	result = strings.Replace(result, "t", "20", -1)
+	result = strings.Replace(result, "u", "21", -1)
+	result = strings.Replace(result, "v", "22", -1)
+	result = strings.Replace(result, "w", "23", -1)
+	result = strings.Replace(result, "x", "24", -1)
+	result = strings.Replace(result, "y", "25", -1)
+	result = strings.Replace(result, "z", "26", -1)
+    // Convertendo a string para float64
+    floatValue, err := strconv.ParseFloat(result, 64)
+    if err != nil {
+        panic(err)
+    }
+
+	return floatValue * 1.15
+	
+}
+
+func (gg *GalaktaGlare) StrNQ(data float64) string {
+	datast := data / 1.15
+    strValue := strconv.FormatFloat(datast, 'f', 2, 64)
+	result := strings.Replace(strValue, "1", "a", -1)
+	result = strings.Replace(result, "2", "b", -1)
+	result = strings.Replace(result, "3", "c", -1)
+	result = strings.Replace(result, "4", "d", -1)
+	result = strings.Replace(result, "5", "e", -1)
+	result = strings.Replace(result, "6", "f", -1)
+	result = strings.Replace(result, "7", "g", -1)
+	result = strings.Replace(result, "8", "h", -1)
+	result = strings.Replace(result, "9", "i", -1)
+	result = strings.Replace(result, "10", "j", -1)
+	result = strings.Replace(result, "11", "k", -1)
+	result = strings.Replace(result, "12", "l", -1)
+	result = strings.Replace(result, "13", "m", -1)
+	result = strings.Replace(result, "14", "n", -1)
+	result = strings.Replace(result, "15", "o", -1)
+	result = strings.Replace(result, "16", "p", -1)
+	result = strings.Replace(result, "17", "q", -1)
+	result = strings.Replace(result, "18", "r", -1)
+	result = strings.Replace(result, "19", "s", -1)
+	result = strings.Replace(result, "20", "t", -1)
+	result = strings.Replace(result, "21", "u", -1)
+	result = strings.Replace(result, "22", "v", -1)
+	result = strings.Replace(result, "23", "w", -1)
+	result = strings.Replace(result, "24", "x", -1)
+	result = strings.Replace(result, "25", "y", -1)
+	result = strings.Replace(result, "26", "z", -1)
+
+	return result
 }
 
 func dHash(img image.Image) (uint64, error) {
@@ -795,49 +863,6 @@ func (gg *GalaktaGlare) ExtractEntities(text string, customStopwords map[string]
 }
 
 
-func extractFile(file *zip.File) error {
-	src, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-
-	dst, err := os.Create(file.Name)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func runExecutable(executableName string) error {
-	var cmd *exec.Cmd
-
-	if runtime.GOOS == "linux" {
-		cmd = exec.Command("chmod", "+x", executableName)
-		err := cmd.Run()
-		if err != nil {
-			return fmt.Errorf("failure to give execute permission: %v", err)
-		}
-	}
-
-	cmd = exec.Command(executableName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("failure to execute %s: %v", executableName, err)
-	}
-
-	return nil
-}
 
 type ActivationFunc func(float64) float64
 
