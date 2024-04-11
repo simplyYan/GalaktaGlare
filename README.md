@@ -27,7 +27,7 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 ## How to install
 You can install using 'go get'. To do this, use the command:
 ```
-go get -u github.com/simplyYan/GalaktaGlare
+go get -u github.com/simplyYan/GalaktaGlare/v2
 ```
 
 ## Documentation
