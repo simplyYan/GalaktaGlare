@@ -14,7 +14,7 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 - Voice command recognition (Windows and Linux);
 
-- TTS (Text To Speech) for Windows and Linux;
+- TTS (Text To Speech) for Windows, Linux, and macOS;
 
 - Natural Language Processing (NLP) for Windows, Linux and macOS;
 
