@@ -55,7 +55,7 @@ func (gg *GalaktaGlare) ImageDB(folderPath string) error {
 	return nil
 }
 
-func dHash(img image.Image) (uint64, error) {
+func (gg *GalaktaGlare) dHash(img image.Image) (uint64, error) {
 	hash, err := goimagehash.DifferenceHash(img)
 	if err != nil {
 		return 0, err
