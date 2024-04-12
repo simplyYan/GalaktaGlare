@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -52,75 +51,28 @@ func (gg *GalaktaGlare) ImageDB(folderPath string) error {
 	return nil
 }
 
-func (gg *GalaktaGlare) Numseq(text string) float64 {
-	textLow := strings.ToLower(text)
-	result := strings.Replace(textLow, "a", "1", -1)
-	result = strings.Replace(result, "b", "2", -1)
-	result = strings.Replace(result, "c", "3", -1)
-	result = strings.Replace(result, "d", "4", -1)
-	result = strings.Replace(result, "e", "5", -1)
-	result = strings.Replace(result, "f", "6", -1)
-	result = strings.Replace(result, "g", "7", -1)
-	result = strings.Replace(result, "h", "8", -1)
-	result = strings.Replace(result, "i", "9", -1)
-	result = strings.Replace(result, "j", "10", -1)
-	result = strings.Replace(result, "k", "11", -1)
-	result = strings.Replace(result, "l", "12", -1)
-	result = strings.Replace(result, "m", "13", -1)
-	result = strings.Replace(result, "n", "14", -1)
-	result = strings.Replace(result, "o", "15", -1)
-	result = strings.Replace(result, "p", "16", -1)
-	result = strings.Replace(result, "q", "17", -1)
-	result = strings.Replace(result, "r", "18", -1)
-	result = strings.Replace(result, "s", "19", -1)
-	result = strings.Replace(result, "t", "20", -1)
-	result = strings.Replace(result, "u", "21", -1)
-	result = strings.Replace(result, "v", "22", -1)
-	result = strings.Replace(result, "w", "23", -1)
-	result = strings.Replace(result, "x", "24", -1)
-	result = strings.Replace(result, "y", "25", -1)
-	result = strings.Replace(result, "z", "26", -1)
-    // Convertendo a string para float64
-    floatValue, err := strconv.ParseFloat(result, 64)
-    if err != nil {
-        panic(err)
-    }
+func (gg *GalaktaGlare) Numseq(s string) float64 {
+	var num float64
+	for i, char := range s {
+		
+		val := float64(char)
 
-	return floatValue * 1.15
-	
+		num += val * math.Pow(100, float64(len(s)-i-1)*2) 
+	}
+	return num * 0.15
 }
 
-func (gg *GalaktaGlare) StrNQ(data float64) string {
-	datast := data / 1.15
-    strValue := strconv.FormatFloat(datast, 'f', 2, 64)
-	result := strings.Replace(strValue, "1", "a", -1)
-	result = strings.Replace(result, "2", "b", -1)
-	result = strings.Replace(result, "3", "c", -1)
-	result = strings.Replace(result, "4", "d", -1)
-	result = strings.Replace(result, "5", "e", -1)
-	result = strings.Replace(result, "6", "f", -1)
-	result = strings.Replace(result, "7", "g", -1)
-	result = strings.Replace(result, "8", "h", -1)
-	result = strings.Replace(result, "9", "i", -1)
-	result = strings.Replace(result, "10", "j", -1)
-	result = strings.Replace(result, "11", "k", -1)
-	result = strings.Replace(result, "12", "l", -1)
-	result = strings.Replace(result, "13", "m", -1)
-	result = strings.Replace(result, "14", "n", -1)
-	result = strings.Replace(result, "15", "o", -1)
-	result = strings.Replace(result, "16", "p", -1)
-	result = strings.Replace(result, "17", "q", -1)
-	result = strings.Replace(result, "18", "r", -1)
-	result = strings.Replace(result, "19", "s", -1)
-	result = strings.Replace(result, "20", "t", -1)
-	result = strings.Replace(result, "21", "u", -1)
-	result = strings.Replace(result, "22", "v", -1)
-	result = strings.Replace(result, "23", "w", -1)
-	result = strings.Replace(result, "24", "x", -1)
-	result = strings.Replace(result, "25", "y", -1)
-	result = strings.Replace(result, "26", "z", -1)
 
-	return result
+func (gg *GalaktaGlare) StrNQ(n float64) string {
+	var s string
+	n /= 0.15 
+	for n > 0 {
+		val := int(n) % 10000 
+		n = math.Floor(n / 10000)
+		char := string(rune(val))
+		s = char + s 
+	}
+	return s
 }
 
 func dHash(img image.Image) (uint64, error) {
