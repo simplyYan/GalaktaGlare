@@ -28,7 +28,7 @@ go get -u github.com/simplyYan/GalaktaGlare/v2
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
 
 ## License
-GalaktaGlare is open-source and under the BSD-3-Clause license
+GalaktaGlare is open-source and under the CC0-1.0 license.
 
 ## Contribute
 You can contribute to this project. Just open a pull-request and make your changes. Add, improve or correct features.
