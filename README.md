@@ -16,6 +16,8 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 - Decision Trees;
 
+- Data analysis;
+
 ## How to install
 You can install using 'go get'. To do this, use the command:
 ```
