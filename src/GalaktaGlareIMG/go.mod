@@ -1,4 +1,4 @@
-module github.com/simplyYan/GalaktaGlare/GalaktaGlareIMG
+module github.com/simplyYan/GalaktaGlare/src/GalaktaGlareIMG
 
 go 1.22.4
 
