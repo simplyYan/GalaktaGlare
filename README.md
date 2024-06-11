@@ -44,6 +44,12 @@ GalaktaGlareDT
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareDT
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDT
+- Images: 
+GalaktaGlareIMG
+```
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareIMG
+```
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareIMG
 
 ## Documentation
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
