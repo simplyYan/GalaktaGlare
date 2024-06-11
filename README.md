@@ -23,25 +23,25 @@ To make it lighter and more organized, GalaktaGlare is separated into different 
 - Neural Networks:
 GalaktaGlareNN
 ```
-go get -u github.com/simplyYan/GalaktaGlare/GalaktaGlareNN
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareNN
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNN
 - NLP:
 GalaktaGlareNLP
 ```
-go get -u github.com/simplyYan/GalaktaGlare/GalaktaGlareNLP
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareNLP
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNLP
 - Data analysis:
 GalaktaGlareDATA
 ```
-go get -u github.com/simplyYan/GalaktaGlare/GalaktaGlareDATA
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareDATA
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDATA
 - Decision Trees: 
 GalaktaGlareDT
 ```
-go get -u github.com/simplyYan/GalaktaGlare/GalaktaGlareDT
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareDT
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDT
 
