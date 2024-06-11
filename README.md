@@ -19,10 +19,31 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 - Data analysis;
 
 ## How to install
-You can install using 'go get'. To do this, use the command:
+To make it lighter and more organized, GalaktaGlare is separated into different packages. The available packages are:
+- Neural Networks:
+GalaktaGlareNN
 ```
-go get -u github.com/simplyYan/GalaktaGlare/v2
+go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareNN
 ```
+- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNN
+- NLP:
+GalaktaGlareNLP
+```
+go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareNLP
+```
+- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNLP
+- Data analysis:
+GalaktaGlareDATA
+```
+go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareDATA
+```
+- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDATA
+- Decision Trees: 
+GalaktaGlareDT
+```
+go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareDT
+```
+- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDT
 
 ## Documentation
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
