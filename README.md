@@ -25,25 +25,25 @@ GalaktaGlareNN
 ```
 go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareNN
 ```
-- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNN
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNN
 - NLP:
 GalaktaGlareNLP
 ```
 go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareNLP
 ```
-- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNLP
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareNLP
 - Data analysis:
 GalaktaGlareDATA
 ```
 go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareDATA
 ```
-- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDATA
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDATA
 - Decision Trees: 
 GalaktaGlareDT
 ```
 go get -u github.com/simplyYan/GalaktaGlare/v2/GalaktaGlareDT
 ```
-- Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDT
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareDT
 
 ## Documentation
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
