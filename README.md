@@ -6,15 +6,7 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 - Text Classification;
 
-- Data analysis;
-
-- Anomaly detection;
-
 - Image classification/recognition;
-
-- Voice command recognition;
-
-- TTS (Text To Speech);
 
 - Natural Language Processing (NLP);
 
