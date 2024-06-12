@@ -49,64 +49,69 @@ func sigmoidDerivative(x float64) float64 {
 
 func (nn *NeuralNetwork) Train(inputs, targets [][]float64, iterations int, learningRate float64) {
     for i := 0; i < iterations; i++ {
-
-        hiddenLayer := make([]float64, nn.hiddenNeurons)
-        for j := 0; j < nn.hiddenNeurons; j++ {
-            var sum float64
-            for k := 0; k < nn.inputNeurons; k++ {
-                sum += inputs[i][k] * nn.weightsInput[k][j]
+        for n := 0; n < len(inputs); n++ {
+            // Feedforward process
+            hiddenLayer := make([]float64, nn.hiddenNeurons)
+            for j := 0; j < nn.hiddenNeurons; j++ {
+                var sum float64
+                for k := 0; k < nn.inputNeurons; k++ {
+                    sum += inputs[n][k] * nn.weightsInput[k][j]
+                }
+                hiddenLayer[j] = sigmoid(sum)
             }
-            hiddenLayer[j] = sigmoid(sum)
-        }
 
-        outputLayer := make([]float64, nn.outputNeurons)
-        for j := 0; j < nn.outputNeurons; j++ {
-            var sum float64
-            for k := 0; k < nn.hiddenNeurons; k++ {
-                sum += hiddenLayer[k] * nn.weightsOutput[k][j]
+            outputLayer := make([]float64, nn.outputNeurons)
+            for j := 0; j < nn.outputNeurons; j++ {
+                var sum float64
+                for k := 0; k < nn.hiddenNeurons; k++ {
+                    sum += hiddenLayer[k] * nn.weightsOutput[k][j]
+                }
+                outputLayer[j] = sigmoid(sum)
             }
-            outputLayer[j] = sigmoid(sum)
-        }
 
-        outputErrors := make([]float64, nn.outputNeurons)
-        for j := 0; j < nn.outputNeurons; j++ {
-            outputErrors[j] = targets[i][j] - outputLayer[j]
-        }
-
-        outputGradients := make([]float64, nn.outputNeurons)
-        for j := 0; j < nn.outputNeurons; j++ {
-            outputGradients[j] = outputErrors[j] * sigmoidDerivative(outputLayer[j])
-        }
-
-        hiddenErrors := make([]float64, nn.hiddenNeurons)
-        for j := 0; j < nn.hiddenNeurons; j++ {
-            var error float64
-            for k := 0; k < nn.outputNeurons; k++ {
-                error += outputGradients[k] * nn.weightsOutput[j][k]
+            // Backpropagation process
+            outputErrors := make([]float64, nn.outputNeurons)
+            for j := 0; j < nn.outputNeurons; j++ {
+                outputErrors[j] = targets[n][j] - outputLayer[j]
             }
-            hiddenErrors[j] = error
-        }
 
-        hiddenGradients := make([]float64, nn.hiddenNeurons)
-        for j := 0; j < nn.hiddenNeurons; j++ {
-            hiddenGradients[j] = hiddenErrors[j] * sigmoidDerivative(hiddenLayer[j])
-        }
-
-        for j := 0; j < nn.hiddenNeurons; j++ {
-            for k := 0; k < nn.outputNeurons; k++ {
-                change := outputGradients[k] * hiddenLayer[j] * learningRate
-                nn.weightsOutput[j][k] += change
+            outputGradients := make([]float64, nn.outputNeurons)
+            for j := 0; j < nn.outputNeurons; j++ {
+                outputGradients[j] = outputErrors[j] * sigmoidDerivative(outputLayer[j])
             }
-        }
 
-        for j := 0; j < nn.inputNeurons; j++ {
-            for k := 0; k < nn.hiddenNeurons; k++ {
-                change := hiddenGradients[k] * inputs[i][j] * learningRate
-                nn.weightsInput[j][k] += change
+            hiddenErrors := make([]float64, nn.hiddenNeurons)
+            for j := 0; j < nn.hiddenNeurons; j++ {
+                var error float64
+                for k := 0; k < nn.outputNeurons; k++ {
+                    error += outputGradients[k] * nn.weightsOutput[j][k]
+                }
+                hiddenErrors[j] = error
+            }
+
+            hiddenGradients := make([]float64, nn.hiddenNeurons)
+            for j := 0; j < nn.hiddenNeurons; j++ {
+                hiddenGradients[j] = hiddenErrors[j] * sigmoidDerivative(hiddenLayer[j])
+            }
+
+            // Update weights
+            for j := 0; j < nn.hiddenNeurons; j++ {
+                for k := 0; k < nn.outputNeurons; k++ {
+                    change := outputGradients[k] * hiddenLayer[j] * learningRate
+                    nn.weightsOutput[j][k] += change
+                }
+            }
+
+            for j := 0; j < nn.inputNeurons; j++ {
+                for k := 0; k < nn.hiddenNeurons; k++ {
+                    change := hiddenGradients[k] * inputs[n][j] * learningRate
+                    nn.weightsInput[j][k] += change
+                }
             }
         }
     }
 }
+
 
 func (nn *NeuralNetwork) Predict(input []float64) []float64 {
     hiddenLayer := make([]float64, nn.hiddenNeurons)
