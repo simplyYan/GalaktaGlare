@@ -50,13 +50,13 @@ GalaktaGlareIMG
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareIMG
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareIMG
-- LSTM: 
+- Long Short-Term Memory: 
 GalaktaGlareLSTM
 ```
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareLSTM
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareLSTM
-- TTS: 
+- Text-To-Speech: 
 GalaktaGlareTTS
 ```
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareTTS
