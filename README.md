@@ -50,6 +50,12 @@ GalaktaGlareIMG
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareIMG
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareIMG
+- LSTM: 
+GalaktaGlareLSTM
+```
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareLSTM
+```
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareLSTM
 
 ## Documentation
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
