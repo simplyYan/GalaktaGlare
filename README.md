@@ -56,7 +56,7 @@ GalaktaGlareLSTM
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareLSTM
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareLSTM
-- Text-To-Speech: 
+- Text-To-Speech (BETA): 
 GalaktaGlareTTS
 ```
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareTTS
