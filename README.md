@@ -18,6 +18,8 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 
 - Data analysis;
 
+- TTS;
+
 ## How to install
 To make it lighter and more organized, GalaktaGlare is separated into different packages. The available packages are:
 - Neural Networks:
