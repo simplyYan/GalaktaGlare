@@ -56,6 +56,12 @@ GalaktaGlareLSTM
 go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareLSTM
 ```
 > Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareLSTM
+- TTS: 
+GalaktaGlareTTS
+```
+go get -u github.com/simplyYan/GalaktaGlare/src/GalaktaGlareTTS
+```
+> Docs: https://github.com/simplyYan/GalaktaGlare/wiki/GalaktaGlareTTS
 
 ## Documentation
 The documentation is available on the [Wiki of this repository](https://github.com/simplyYan/GalaktaGlare/wiki/Docs).
