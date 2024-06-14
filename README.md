@@ -5,20 +5,14 @@ GalaktaGlare is a powerful, fast, broad, easy and innovative framework for Go th
 ## Main features
 
 - Text Classification;
-
 - Image classification/recognition;
-
 - Natural Language Processing (NLP);
-
 - Operations with Tensors;
-
 - Support for creating neural networks;
-
 - Decision Trees;
-
 - Data analysis;
-
 - TTS;
+- LSTM
 
 ## How to install
 To make it lighter and more organized, GalaktaGlare is separated into different packages. The available packages are:
